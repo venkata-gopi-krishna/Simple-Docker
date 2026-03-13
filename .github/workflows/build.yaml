@@ -1,4 +1,4 @@
-name: Build and Push Docker Image
+name: Build, Push Docker Image & Update Manifests
 
 on:
   push:
@@ -7,11 +7,10 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: Checkout app repository
         uses: actions/checkout@v4
 
       - name: Login to DockerHub
@@ -29,3 +28,23 @@ jobs:
           context: .
           push: true
           tags: ${{ secrets.DOCKER_USERNAME }}/simple-html-app:latest
+
+      - name: Checkout manifests repository
+        uses: actions/checkout@v4
+        with:
+          repository: venkata-gopi-krishna/simple-html-app-k8s
+          token: ${{ secrets.GITHUB_TOKEN }}
+          path: manifests
+
+      - name: Update deployment.yaml in manifests repo
+        run: |
+          sed -i "s|image: .*|image: ${{ secrets.DOCKER_USERNAME }}/simple-html-app:latest|" manifests/deployment.yaml
+
+      - name: Commit & Push updated manifests
+        run: |
+          cd manifests
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git add deployment.yaml
+          git commit -m "Update image tag to latest"
+          git push
