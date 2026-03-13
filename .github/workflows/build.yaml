@@ -27,7 +27,8 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKER_USERNAME }}/simple-html-app:latest
+         
+          tags: ${{ secrets.DOCKER_USERNAME }}/simple-html-app:${{ github.sha }}
 
       - name: Checkout manifests repository
         uses: actions/checkout@v4
